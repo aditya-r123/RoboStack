@@ -16,7 +16,7 @@ class MultiColorBlockEnv(SingleArmEnv):
     def __init__(
         self,
         robots="Panda",
-        n_blocks: int = 5,
+        n_blocks: int = 10,
         block_size=(0.02, 0.02, 0.02),
         block_rgba=None,
         # ------------- new table-related kwargs (match Robosuite defaults) -------------
