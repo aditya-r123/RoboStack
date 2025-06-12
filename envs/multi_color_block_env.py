@@ -55,6 +55,10 @@ class MultiColorBlockEnv(SingleArmEnv):
         """
         Loads an xml model, puts it in self.model
         """
+        # Start from a clean slate each time this method is invoked
+        # (env construction + every reset when hard_reset=True).
+        self.blocks = []
+
         super()._load_model()
 
         # Adjust base pose accordingly
@@ -89,9 +93,11 @@ class MultiColorBlockEnv(SingleArmEnv):
             rotation=None,
             ensure_object_boundary_in_range=True,
             ensure_valid_placement=True,
-            reference_pos=self.table_offset,                    # table origin
+            reference_pos=self.table_offset,
             z_offset=self.block_size[2] / 2,
         )
+        self.block_sampler.reset()
+        self.block_sampler.add_objects(self.blocks)
 
         # task includes arena, robot, and objects of interest
         self.model = ManipulationTask(
@@ -106,9 +112,23 @@ class MultiColorBlockEnv(SingleArmEnv):
     def _reset_internal(self):
         super()._reset_internal()                  # resets robot + sim
 
-        placements = self.block_sampler.sample(self.blocks)
-        for obj, (pos, quat) in zip(self.blocks, placements):
-            qpos = np.concatenate([pos, quat])
-            self.sim.data.set_joint_qpos(f"{obj.name}:joint", qpos)
+        # Sample poses for each block
+        object_placements = self.block_sampler.sample()
+
+        for obj_pos, obj_quat, obj in object_placements.values():
+            qpos = np.concatenate([obj_pos, obj_quat])
+            # every BoxObject defines its joint name(s) in obj.joints
+            self.sim.data.set_joint_qpos(obj.joints[0], qpos)
 
         self.sim.forward()                         # commit poses
+
+    # ------------------------------------------------------------------ #
+    #  REWARD                                                            #
+    # ------------------------------------------------------------------ #
+    def reward(self, action=None):
+        """
+        Very simple placeholder reward.
+        Returns 0 every step.  Extend this function with a meaningful
+        task-specific reward when you decide what the agent should do.
+        """
+        return 0.0
