@@ -7,23 +7,55 @@ Simple joint-space PID controller skeleton.
 
 import numpy as np
 
-class JointSpacePID:
-    def __init__(self, kp=None, ki=None, kd=None, num_joints: int = 7):
-        self.kp = np.array(kp) if kp is not None else np.full(num_joints,  50.0)
-        self.ki = np.array(ki) if ki is not None else np.zeros(num_joints)
-        self.kd = np.array(kd) if kd is not None else np.full(num_joints,  2.0)
+class PID:
+    def __init__(self, kp, ki, kd, target):
+        """
+        Initialize a variable-dimension PID controller.
 
-        self.integral = np.zeros(num_joints)
-        self.prev_err = np.zeros(num_joints)
+        Args:
+            kp (float or list): Proportional gain(s) per axis (or scalar).
+            ki (float or list): Integral gain(s) per axis (or scalar).
+            kd (float or list): Derivative gain(s) per axis (or scalar).
+            target (tuple or array): Target position of any dimension.
+        """
+        self.kp = kp
+        self.ki = ki
+        self.kd = kd
+        self.target = target
+        self.error = np.zeros_like(self.target)
+    def reset(self, target=None):
+        """
+        Reset the internal state of the PID controller.
 
-    def reset(self):
-        self.integral[:] = 0
-        self.prev_err[:] = 0
+        Args:
+            target (optional): New target to reset to.
+        """
 
-    def __call__(self, q, q_des, dt):
-        err = q_des - q
-        self.integral += err * dt
-        deriv = (err - self.prev_err) / max(dt, 1e-6)
-        self.prev_err = err
+        if target is not None:
+            self.target = target
+            self.error = np.zeros_like(self.target)
+        
+    def get_error(self):    
+        """
+        Returns:
+            float: Magnitude of the last error vector.
+        """
+        
+        return self.error
+    
+    def update(self, current_pos, dt=0.1):
+        """
+        Compute the PID control signal.
 
-        return self.kp * err + self.ki * self.integral + self.kd * deriv
+        Args:
+            current_pos (array-like): Current position (any dimension).
+            dt (float): Time delta in seconds.
+
+        Returns:
+            np.ndarray: Control output vector.
+        """
+        new_error = -1*(current_pos-self.target)
+        pidSignal = self.kp*(new_error) + self.kd*((new_error) - (self.error))/dt + self.ki*self.error*dt
+        self.error = new_error
+        return pidSignal
+
