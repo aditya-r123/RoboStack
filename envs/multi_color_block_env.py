@@ -16,7 +16,7 @@ class MultiColorBlockEnv(SingleArmEnv):
     def __init__(
         self,
         robots="Panda",
-        n_blocks: int = 10,
+        n_blocks: int = 8,
         block_size=(0.02, 0.02, 0.02),
         block_rgba=None,
         # ------------- new table-related kwargs (match Robosuite defaults) -------------
@@ -32,11 +32,14 @@ class MultiColorBlockEnv(SingleArmEnv):
             block_rgba = [
                 [0.90, 0.10, 0.10, 1],  # red
                 [0.10, 0.90, 0.10, 1],  # green
-                [0.10, 0.10, 0.90, 1],  # blue
-                [0.90, 0.90, 0.10, 1],  # yellow
-                [0.90, 0.10, 0.90, 1],  # magenta
+                #[0.10, 0.10, 0.90, 1],  # blue
+                #[0.90, 0.90, 0.10, 1],  # yellow
+                #[0.90, 0.10, 0.90, 1],  # magenta
             ]
         self.block_rgba = block_rgba
+
+        # Assign color indices so that every two blocks alternate: [red, red, green, green, ...]
+        self.tower_color_indices = [(i // 2) % 2 for i in range(self.n_blocks)]
 
         self.blocks = []          # BoxObject handles
         self.block_sampler = None  # will be built in _load_model()
@@ -45,6 +48,18 @@ class MultiColorBlockEnv(SingleArmEnv):
         self.table_full_size = table_full_size
         self.table_friction = table_friction
         self.table_offset = table_offset
+
+        # Set extremely loose joint limits for Panda by default
+        if overwrite_robot_jnt_range is None and robots == "Panda":
+            overwrite_robot_jnt_range = {
+                "panda_joint1": [-6.28, 6.28],
+                "panda_joint2": [-6.28, 6.28],
+                "panda_joint3": [-6.28, 6.28],
+                "panda_joint4": [-6.28, 6.28],
+                "panda_joint5": [-6.28, 6.28],
+                "panda_joint6": [-6.28, 6.28],
+                "panda_joint7": [-6.28, 6.28],
+            }
         self.overwrite_robot_jnt_range = overwrite_robot_jnt_range
 
         # All other common kwargs (controller_configs, horizon, etc.) are passed up
@@ -67,8 +82,8 @@ class MultiColorBlockEnv(SingleArmEnv):
         if self.overwrite_robot_jnt_range:
             robot_model = self.robots[0].robot_model
             for joint in robot_model.joints:
-                if joint.get("name") in self.overwrite_robot_jnt_range:
-                    joint_name = joint.get("name")
+                joint_name = joint if isinstance(joint, str) else joint.get("name")
+                if joint_name in self.overwrite_robot_jnt_range:
                     min_val, max_val = self.overwrite_robot_jnt_range[joint_name]
                     joint.set("range", f"{min_val} {max_val}")
 
@@ -88,10 +103,11 @@ class MultiColorBlockEnv(SingleArmEnv):
 
         # ---------- create block assets ----------
         for i in range(self.n_blocks):
+            color_idx = self.tower_color_indices[i]
             blk = BoxObject(
                 name=f"block_{i}",
                 size=self.block_size,
-                rgba=self.block_rgba[i % len(self.block_rgba)],
+                rgba=self.block_rgba[color_idx],
             )
             self.blocks.append(blk)
 
