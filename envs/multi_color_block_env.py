@@ -23,6 +23,7 @@ class MultiColorBlockEnv(SingleArmEnv):
         table_full_size=(0.4, 1, 0.05),
         table_friction=(1.0, 5e-3, 1e-4),
         table_offset=(0.0, 0.0, 0.8),
+        overwrite_robot_jnt_range=None,
         **kwargs,
     ):
         self.n_blocks = n_blocks
@@ -44,6 +45,7 @@ class MultiColorBlockEnv(SingleArmEnv):
         self.table_full_size = table_full_size
         self.table_friction = table_friction
         self.table_offset = table_offset
+        self.overwrite_robot_jnt_range = overwrite_robot_jnt_range
 
         # All other common kwargs (controller_configs, horizon, etc.) are passed up
         super().__init__(robots=robots, **kwargs)
@@ -60,6 +62,15 @@ class MultiColorBlockEnv(SingleArmEnv):
         self.blocks = []
 
         super()._load_model()
+
+        # Overwrite robot joint ranges if specified
+        if self.overwrite_robot_jnt_range:
+            robot_model = self.robots[0].robot_model
+            for joint in robot_model.joints:
+                if joint.get("name") in self.overwrite_robot_jnt_range:
+                    joint_name = joint.get("name")
+                    min_val, max_val = self.overwrite_robot_jnt_range[joint_name]
+                    joint.set("range", f"{min_val} {max_val}")
 
         # Adjust base pose accordingly
         xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size[0])
