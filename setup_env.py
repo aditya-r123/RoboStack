@@ -9,8 +9,15 @@ import numpy as np
 env = robosuite.make(
     "MultiColorBlockEnv",
     robots="Panda",
-    has_renderer=True,
+    has_renderer=False,
     has_offscreen_renderer=True,
+    use_camera_obs=True,
+
+    # choose the camera(s) you want images from
+    camera_names="birdview",     # <- top-down camera
+    render_camera="frontview",         # which one to show if you call env.render()
+    camera_heights=480,
+    camera_widths=480,           # square ⇒ no side bars
     horizon=500,
     control_freq=20,
     # controller_configs=None  # ← omit to use robosuite's default OSC-Pose

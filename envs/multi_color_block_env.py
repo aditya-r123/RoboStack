@@ -23,6 +23,7 @@ class MultiColorBlockEnv(SingleArmEnv):
         table_full_size=(0.8, 1.6, 0.05),
         table_friction=(1.0, 5e-3, 1e-4),
         table_offset=(0.0, 0.0, 0.8),
+        base_yaw=0.0,                 # <-- NEW: rotation around z (radians)
         **kwargs,
     ):
         self.n_blocks = n_blocks
@@ -45,6 +46,8 @@ class MultiColorBlockEnv(SingleArmEnv):
         self.table_friction = table_friction
         self.table_offset = table_offset
 
+        self.base_yaw = base_yaw
+
         # All other common kwargs (controller_configs, horizon, etc.) are passed up
         super().__init__(robots=robots, **kwargs)
 
@@ -61,7 +64,10 @@ class MultiColorBlockEnv(SingleArmEnv):
 
         super()._load_model()
 
-        # Adjust base pose accordingly
+        # rotate + position robot
+        yaw = np.array((0, 0, self.base_yaw))
+        self.robots[0].robot_model.set_base_ori(yaw)
+
         xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size[0])
         self.robots[0].robot_model.set_base_xpos(xpos)
 
