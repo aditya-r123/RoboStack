@@ -364,7 +364,6 @@ class MultiColorStackPolicy(object):
             action[:3] = self.pid.update(ee_pos)
             return action
         
-        # --- Recovery States ---
         if self.state == 9:  # 9: Recovery Lift
             print(f"Recovery State 9: Lifting up. Retry {self.retry_counter}/{self.max_retries}.")
             action[:3] = self.pid.update(ee_pos)
