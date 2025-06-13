@@ -42,9 +42,6 @@ env = robosuite.make(
 # print("Action space:", env.action_spec)
 
 obs = env.reset()
-# ------------------------------------------------------------------ #
-#  Random rollout: sample uniformly within [low, high] for each step #
-# ------------------------------------------------------------------ #
 print(obs.keys())
 low, high = env.action_spec
 policy = MultiColorStackPolicy(obs)          # each is an array of same length
