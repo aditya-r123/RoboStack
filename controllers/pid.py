@@ -1,9 +1,4 @@
-"""
-Simple joint-space PID controller skeleton.
 
-👉  For milestone 2 we will flesh this out; right now we only return zeros
-    so the robot stays still while we inspect the environment.
-"""
 
 import numpy as np
 
