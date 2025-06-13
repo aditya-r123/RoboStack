@@ -20,7 +20,7 @@ class MultiColorBlockEnv(SingleArmEnv):
         block_size=(0.02, 0.02, 0.02),
         block_rgba=None,
         # ------------- new table-related kwargs (match Robosuite defaults) -------------
-        table_full_size=(0.8, 1.6, 0.05),
+        table_full_size=(0.4, 1, 0.05),
         table_friction=(1.0, 5e-3, 1e-4),
         table_offset=(0.0, 0.0, 0.8),
         **kwargs,
@@ -132,3 +132,32 @@ class MultiColorBlockEnv(SingleArmEnv):
         task-specific reward when you decide what the agent should do.
         """
         return 0.0
+
+    def _get_observations(self, force_update=False):
+        """
+        Returns an OrderedDict containing observations [(name_string, np.array), ...].
+        Extends the parent class observations with block positions and colors.
+        
+        Args:
+            force_update (bool): If True, forces all observations to be updated
+        """
+        # Get the parent class observations
+        obs = super()._get_observations(force_update=force_update)
+        
+        # Add block size to obs
+        obs['block_size'] = np.array(self.block_size)
+
+        # Add block positions and colors to the observation
+        block_positions = []
+        block_colors = []
+        for i, block in enumerate(self.blocks):
+            # Get the position of each block from the simulation
+            pos = self.sim.data.get_joint_qpos(block.joints[0])[:3]  # Only get xyz position
+            block_positions.append(pos)
+            # Get the color index (0-4) for each block
+            block_colors.append(i % len(self.block_rgba))
+        
+        # Add all block positions and colors as arrays to the observation
+        obs['block_positions'] = np.array(block_positions)
+        obs['block_colors'] = np.array(block_colors)
+        return obs
