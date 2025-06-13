@@ -16,7 +16,7 @@ class MultiColorBlockEnv(SingleArmEnv):
     def __init__(
         self,
         robots="Panda",
-        n_blocks: int = 10,
+        n_blocks: int = 8,
         block_size=(0.02, 0.02, 0.02),
         block_rgba=None,
         # ------------- new table-related kwargs (match Robosuite defaults) -------------
@@ -32,9 +32,9 @@ class MultiColorBlockEnv(SingleArmEnv):
             block_rgba = [
                 [0.90, 0.10, 0.10, 1],  # red
                 [0.10, 0.90, 0.10, 1],  # green
-                [0.10, 0.10, 0.90, 1],  # blue
-                [0.90, 0.90, 0.10, 1],  # yellow
-                [0.90, 0.10, 0.90, 1],  # magenta
+                # [0.10, 0.10, 0.90, 1],  # blue
+                # [0.90, 0.90, 0.10, 1],  # yellow
+                # [0.90, 0.10, 0.90, 1],  # magenta
             ]
         self.block_rgba = block_rgba
 
@@ -63,7 +63,6 @@ class MultiColorBlockEnv(SingleArmEnv):
 
         super()._load_model()
 
-        # Overwrite robot joint ranges if specified
         if self.overwrite_robot_jnt_range:
             robot_model = self.robots[0].robot_model
             for joint in robot_model.joints:
@@ -157,6 +156,7 @@ class MultiColorBlockEnv(SingleArmEnv):
         
         # Add block size to obs
         obs['block_size'] = np.array(self.block_size)
+        obs['table_top_z'] = self.table_offset[2] + self.table_full_size[2] / 2
 
         # Add block positions and colors to the observation
         block_positions = []

@@ -124,6 +124,9 @@ class MultiColorStackPolicy(object):
         self.stack_gap = 0.005
         self.block_height = obs['block_size'][2]
         self.wait_steps = 10
+        self.table_top_z = obs['table_top_z']
+        self.block_colors = obs['block_colors']
+        self.non_base_block_indices = []
 
         # Recovery parameters
         self.max_stuck_steps = 350
@@ -161,11 +164,38 @@ class MultiColorStackPolicy(object):
 
                 for i in range(1, len(color_indices)):
                     block_to_stack_idx = color_indices[i]
+                    self.non_base_block_indices.append(block_to_stack_idx)
                     self.plan.append({
                         'source_idx': block_to_stack_idx,
                         'target_color': color
                     })
         print(f"Built plan with {len(self.plan)} tasks.")
+
+    def _check_and_recover_fallen_blocks(self, obs, final_check=False):
+        block_positions = obs['block_positions']
+
+        ignore_idx = -1
+        if not final_check and self.current_task_idx < len(self.plan):
+            ignore_idx = self.plan[self.current_task_idx]['source_idx']
+
+        planned_indices = {task['source_idx'] for task in self.plan[self.current_task_idx:]}
+
+        for idx in self.non_base_block_indices:
+            if idx == ignore_idx:
+                continue
+            
+            is_on_table = block_positions[idx][2] < self.table_top_z + self.block_height * 1.5
+
+            if is_on_table and idx not in planned_indices:
+                print(f"Detected fallen block {idx}. Adding recovery task to plan.")
+                color = self.block_colors[idx]
+                new_task = {
+                    'source_idx': idx,
+                    'target_color': color
+                }
+                self.plan.insert(self.current_task_idx, new_task)
+                self._setup_for_current_task(obs)
+                return
 
     def _set_state(self, new_state):
         if self.state != new_state:
@@ -202,8 +232,16 @@ class MultiColorStackPolicy(object):
         return np.sum((ee_pos - self.cur_target) ** 2) < tol
 
     def get_action(self, obs):
+        self._check_and_recover_fallen_blocks(obs)
+
+        if self.current_task_idx >= len(self.plan):
+            print("All tasks completed. Final check for fallen blocks...")
+            self._check_and_recover_fallen_blocks(obs, final_check=True)
+            if self.current_task_idx >= len(self.plan):
+                self.done = True
+        
         if self.done:
-            print("MultiColorStackPolicy: Done.")
+            print("MultiColorStackPolicy: All blocks stacked. Done.")
             return np.zeros(7)
 
         ee_pos = obs["robot0_eef_pos"]
