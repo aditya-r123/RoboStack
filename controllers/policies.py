@@ -119,14 +119,14 @@ class StackPolicy(object):
 class MultiColorStackPolicy(object):
     def __init__(self, obs):
         self.hover_h   = 0.05         
-        self.lift_h    = 0.07          
-        self.descend_h =  - 0.025
+        self.lift_h    = 0.15          
+        self.descend_h =  - 0.03
         self.stack_gap = 0.005
         self.block_height = obs['block_size'][2]
         self.wait_steps = 10
 
         # Recovery parameters
-        self.max_stuck_steps = 250
+        self.max_stuck_steps = 350
         self.max_retries = 3
         self.rotation_duration = 10
         self.stuck_counter = 0
@@ -232,7 +232,7 @@ class MultiColorStackPolicy(object):
                 self.pre_recovery_target = self.cur_target.copy()
                 self._set_state(9)  # Start recovery: Lift
                 self.cur_target = ee_pos.copy()
-                self.cur_target[2] += self.lift_h
+                self.cur_target[2] += self.hover_h
                 self.pid.reset(self.cur_target)
 
         if self.state == 0: # Hover above source cube, gripper open
@@ -329,7 +329,7 @@ class MultiColorStackPolicy(object):
                     if stack_top_z > max_stack_z:
                         max_stack_z = stack_top_z
                 
-                self.safe_z = max_stack_z + self.lift_h + self.hover_h
+                self.safe_z = max_stack_z + self.lift_h
 
                 self.cur_target = ee_pos.copy()
                 self.cur_target[2] = self.safe_z
