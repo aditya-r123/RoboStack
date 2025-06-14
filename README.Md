@@ -1,11 +1,5 @@
-# Multicolour-Block Robosuite Environment
+# RoboStack
 
-This repository provides a minimal custom task for **Robosuite** that spawns
-multiple coloured blocks on a table in front of a Panda arm.  
-Everything task-specific lives in the `robostack/` package; Robosuite itself is
-pulled from PyPI.
-
----
 
 ## 1.  Prerequisites
 * Python ≥ 3.9 (tested with 3.10)
