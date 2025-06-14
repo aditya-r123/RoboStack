@@ -2,8 +2,8 @@
 Quick manual test – just runs random actions so you can see the blocks spawn.
 """
 
-import robosuite                                 # must come *before* env import
-import envs                                      # noqa: F401  (triggers register_env)
+import robosuite                                
+import envs                           
 import numpy as np
 from controllers.policies import *
 
@@ -33,7 +33,7 @@ env = robosuite.make(
         "interpolation": None,
         # "ramp_ratio": 0.2,
     }
-    # n_blocks=8,             # pass extra kwargs straight through
+    # n_blocks=8,            
 )
 
 # Print controller information
@@ -42,12 +42,10 @@ env = robosuite.make(
 # print("Action space:", env.action_spec)
 
 obs = env.reset()
-# ------------------------------------------------------------------ #
-#  Random rollout: sample uniformly within [low, high] for each step #
-# ------------------------------------------------------------------ #
+
 print(obs.keys())
 low, high = env.action_spec
-policy = MultiColorStackPolicy(obs)          # each is an array of same length
+policy = MultiColorStackPolicy(obs)         
 for _ in range(100000):
     action = policy.get_action(obs)
     # print("Final action:", action)
