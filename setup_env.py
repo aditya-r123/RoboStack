@@ -1,6 +1,3 @@
-"""
-Quick manual test – just runs random actions so you can see the blocks spawn.
-"""
 
 import robosuite                                
 import envs                           
