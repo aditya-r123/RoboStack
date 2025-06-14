@@ -19,7 +19,7 @@ class MultiColorBlockEnv(SingleArmEnv):
         n_blocks: int = 8,
         block_size=(0.02, 0.02, 0.02),
         block_rgba=None,
-        # ------------- new table-related kwargs (match Robosuite defaults) -------------
+
         table_full_size=(0.4, 1, 0.05),
         table_friction=(1.0, 5e-3, 1e-4),
         table_offset=(0.0, 0.0, 0.8),
@@ -50,9 +50,6 @@ class MultiColorBlockEnv(SingleArmEnv):
         # All other common kwargs (controller_configs, horizon, etc.) are passed up
         super().__init__(robots=robots, **kwargs)
 
-    # ------------------------------------------------------------------ #
-    #  ONE-TIME MODEL BUILD                                              #
-    # ------------------------------------------------------------------ #
     def _load_model(self):
         """
         Loads an xml model, puts it in self.model
@@ -85,7 +82,6 @@ class MultiColorBlockEnv(SingleArmEnv):
         # Arena always gets set to zero origin
         mujoco_arena.set_origin([0, 0, 0])
 
-        # ---------- create block assets ----------
         for i in range(self.n_blocks):
             blk = BoxObject(
                 name=f"block_{i}",
@@ -94,7 +90,6 @@ class MultiColorBlockEnv(SingleArmEnv):
             )
             self.blocks.append(blk)
 
-        # ---------- placement sampler (keeps blocks on table) ----------
         half_x, half_y = self.table_full_size[0] / 2, self.table_full_size[1] / 2
         self.block_sampler = UniformRandomSampler(
             name="block_sampler",
@@ -116,9 +111,6 @@ class MultiColorBlockEnv(SingleArmEnv):
             mujoco_objects=self.blocks,
         )
 
-    # ------------------------------------------------------------------ #
-    #  PER-EPISODE RESET                                                 #
-    # ------------------------------------------------------------------ #
     def _reset_internal(self):
         super()._reset_internal()                  # resets robot + sim
 
@@ -132,9 +124,6 @@ class MultiColorBlockEnv(SingleArmEnv):
 
         self.sim.forward()                         # commit poses
 
-    # ------------------------------------------------------------------ #
-    #  REWARD                                                            #
-    # ------------------------------------------------------------------ #
     def reward(self, action=None):
         """
         Very simple placeholder reward.
