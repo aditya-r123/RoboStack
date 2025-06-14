@@ -1,10 +1,5 @@
 import numpy as np
 from controllers.pid import PID
-"""
-Where we'll put higher-level logic: choosing which block to pick,
-what target pose to place it at, colour detection, etc.
-For now, only a dummy policy that does nothing.
-"""
 
 class IdlePolicy:
     def reset(self, env):
@@ -18,15 +13,6 @@ class IdlePolicy:
 
 #oringinal policy from coding assignment to serve as a baseline
 class StackPolicy(object):
-    """
-    States
-    0 : Hover above cubeA, gripper open
-    1 : Descend to cubeA centre, gripper open
-    2 : close gripper and lift cubeA to a safe height
-    3 : translate to point above cubeB
-    4 : Descend until cubeA is just over cubeB
-    5 : Open gripper to release
-    """
 
     def __init__(self, obs):
         self.hover_h   = 0.06         
@@ -50,7 +36,6 @@ class StackPolicy(object):
         cubeB  = obs["cubeB_pos"]
 
         action = np.zeros(7)              
-
 
 
         # Move grappler abobe cubeA and keep it open
@@ -402,7 +387,6 @@ class MultiColorStackPolicy(object):
             action[:3] = self.pid.update(ee_pos)
             return action
         
-        # --- Recovery States ---
         if self.state == 9:  # 9: Recovery Lift
             print(f"Recovery State 9: Lifting up. Retry {self.retry_counter}/{self.max_retries}.")
             action[:3] = self.pid.update(ee_pos)
